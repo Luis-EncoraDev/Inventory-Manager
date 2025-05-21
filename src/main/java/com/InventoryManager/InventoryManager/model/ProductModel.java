@@ -52,7 +52,7 @@ public class ProductModel {
         this.stockQuantity = 0;
     }
 
-    public void markInStock() {
-        this.stockQuantity = 10;
+    public void markInStock(int stockQuantity) {
+        this.stockQuantity = stockQuantity;
     }
 }
