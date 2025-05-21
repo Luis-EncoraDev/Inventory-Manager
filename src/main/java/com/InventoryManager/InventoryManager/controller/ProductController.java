@@ -3,6 +3,10 @@ package com.InventoryManager.InventoryManager.controller;
 import com.InventoryManager.InventoryManager.model.ProductModel;
 import com.InventoryManager.InventoryManager.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,17 +27,16 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ProductModel>> getAllProducts() {
-        List<ProductModel> products = productService.getAllProducts();
+    public ResponseEntity<Page<ProductModel>> getAllProducts(@PageableDefault(page = 0, size = 10) Pageable peagable) {
+        Page<ProductModel> products = productService.getAllProducts(peagable);
         return new ResponseEntity<>(products, HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ProductModel> getProductById(@PathVariable Long id) {
-        Optional<ProductModel> product = productService.getProductById(id);
-        return product.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }
+        var product = productService.getProductById(id);
+        return new ResponseEntity<>(product, HttpStatus.OK);
+    };
 
     @PostMapping
     public ResponseEntity<ProductModel> createProduct(@RequestBody ProductModel product) {
@@ -42,15 +45,22 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Optional<ProductModel>> updateProduct(@PathVariable Long id, @RequestBody ProductModel updatedProduct) {
-        Optional<ProductModel> product = productService.updateProduct(id, updatedProduct);
-        return product.map(value -> new ResponseEntity<>(product, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    public ResponseEntity<ProductModel> updateProduct(@PathVariable Long id, @RequestBody ProductModel product) {
+        ProductModel updatedProduct = productService.updateProduct(id, product);
+        return new ResponseEntity<>(updatedProduct, HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @GetMapping("name/{name}")
+    public ResponseEntity<Page<ProductModel>> searchProductsByName(
+            @PathVariable String name,
+            @PageableDefault(page = 0, size = 10) Pageable pageable) {
+        Page<ProductModel> products = productService.findProductsByName(name, pageable);
+        return new ResponseEntity<>(products, HttpStatus.OK);
     }
 }

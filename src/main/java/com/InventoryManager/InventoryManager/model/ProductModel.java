@@ -2,8 +2,7 @@ package com.InventoryManager.InventoryManager.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -12,8 +11,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
+@AllArgsConstructor
 public class ProductModel {
 
     @Id
@@ -51,7 +52,7 @@ public class ProductModel {
         this.stockQuantity = 0;
     }
 
-    public void markInStock(int quantity) {
-        this.stockQuantity = quantity;
+    public void markInStock() {
+        this.stockQuantity = 10;
     }
 }
