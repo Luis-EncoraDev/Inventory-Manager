@@ -4,7 +4,7 @@ import com.InventoryManager.InventoryManager.model.ProductModel;
 import com.InventoryManager.InventoryManager.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.PageRequest; // Make sure this is imported
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
@@ -27,8 +27,12 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<ProductModel>> getAllProducts(@PageableDefault(page = 0, size = 10) Pageable peagable) {
-        Page<ProductModel> products = productService.getAllProducts(peagable);
+    public ResponseEntity<Page<ProductModel>> getProducts(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) List<String> category,
+            @RequestParam(required = false) Boolean inStock,
+            @PageableDefault(page = 0, size = 10) Pageable pageable) {
+        Page<ProductModel> products = productService.getAllProducts(name, category, inStock, pageable);
         return new ResponseEntity<>(products, HttpStatus.OK);
     }
 
@@ -56,11 +60,15 @@ public class ProductController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @GetMapping("name/{name}")
-    public ResponseEntity<Page<ProductModel>> searchProductsByName(
-            @PathVariable String name,
-            @PageableDefault(page = 0, size = 10) Pageable pageable) {
-        Page<ProductModel> products = productService.findProductsByName(name, pageable);
-        return new ResponseEntity<>(products, HttpStatus.OK);
+    @PostMapping("/{id}/outofstock")
+    public ResponseEntity<ProductModel> markProductOutOfStock(@PathVariable Long id) {
+        ProductModel product = productService.markOutOfStock(id);
+        return new ResponseEntity<>(product, HttpStatus.OK);
+    }
+
+    @PutMapping("/{id}/instock")
+    public ResponseEntity<ProductModel> markProductInStock(@PathVariable Long id, @RequestParam int quantity) {
+        ProductModel product = productService.markInStock(id, quantity);
+        return new ResponseEntity<>(product, HttpStatus.OK);
     }
 }

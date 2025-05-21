@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.InventoryManager.InventoryManager.model.ProductModel;
 import com.InventoryManager.InventoryManager.repository.ProductRepository;
 import java.util.List;
+import java.util.Optional; // Import for Optional
 
 @Service
 public class ProductService {
@@ -20,8 +21,16 @@ public class ProductService {
         this.productRepository = productRepository;
     }
 
-    public Page<ProductModel> getAllProducts(Pageable pageable) {
-        return productRepository.findAll(pageable);
+    public Page<ProductModel> getAllProducts(
+            String name,
+            List<String> categories,
+            Boolean inStock,
+            Pageable pageable) {
+        try {
+            return productRepository.findProductsByFilters(name, categories, inStock, pageable);
+        } catch (Exception ex) {
+            throw new ProductException("Error fetching products: " + ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     public ProductModel getProductById(Long id) {
@@ -33,7 +42,7 @@ public class ProductService {
         try {
             createdProduct = productRepository.save(product);
         } catch (Exception ex) {
-           throw new ProductException(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new ProductException(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
         return  createdProduct;
     }
@@ -57,14 +66,29 @@ public class ProductService {
     }
 
     public void deleteProduct(Long id) {
+        // Check if product exists before deleting
+        if (!productRepository.existsById(id)) {
+            throw new ProductException("Product not found with id: " + id, HttpStatus.NOT_FOUND);
+        }
         productRepository.deleteById(id);
     }
 
-    public Page<ProductModel> findProductsByName(String name, Pageable pageable) {
-        try {
-            return productRepository.findByNameContainingIgnoreCase(name, pageable);
-        } catch (Exception ex) {
-            throw new ProductException(ex.getMessage(), HttpStatus.NOT_FOUND);
-        }
+    public ProductModel markOutOfStock(Long id) {
+        return productRepository.findById(id)
+                .map(product -> {
+                    product.markOutOfStock();
+                    return productRepository.save(product);
+                })
+                .orElseThrow(() -> new ProductException("Product not found with id: " + id, HttpStatus.NOT_FOUND));
+    }
+
+    // Mark product in stock
+    public ProductModel markInStock(Long id, int quantity) {
+        return productRepository.findById(id)
+                .map(product -> {
+                    product.markInStock(quantity);
+                    return productRepository.save(product);
+                })
+                .orElseThrow(() -> new ProductException("Product not found with id: " + id, HttpStatus.NOT_FOUND));
     }
 }
