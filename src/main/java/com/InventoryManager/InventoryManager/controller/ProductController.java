@@ -2,6 +2,7 @@ package com.InventoryManager.InventoryManager.controller;
 
 import com.InventoryManager.InventoryManager.model.ProductModel;
 import com.InventoryManager.InventoryManager.service.ProductService;
+import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest; // Make sure this is imported
@@ -13,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.CrossOrigin;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/products")
@@ -42,22 +42,25 @@ public class ProductController {
         return new ResponseEntity<>(product, HttpStatus.OK);
     };
 
+    @GetMapping("/categoryTotalStock/{category}")
+    public ResponseEntity<Integer> getTotalProductStockInCategory(@PathVariable String category) {
+        return new ResponseEntity<Integer>(productService.getTotalProductsInStockInCategory(category), HttpStatus.OK);
+    }
+
+    @GetMapping("categoryTotalValue/{category}")
+    public ResponseEntity<Float> getTotalValueInCategory(@PathVariable String category) {
+        return new ResponseEntity<Float>(productService.getTotalValueInCategory(category), HttpStatus.OK);
+    }
+
+    @GetMapping("categoryAverageValue/{category}")
+    public ResponseEntity<Float> getAverageValueInCategory(@PathVariable String category) {
+        return new ResponseEntity<Float>(productService.getAverageValueInCategory(category), HttpStatus.OK);
+    }
+
     @PostMapping
     public ResponseEntity<ProductModel> createProduct(@RequestBody ProductModel product) {
         ProductModel createdProduct = productService.createProduct(product);
         return new ResponseEntity<>(createdProduct, HttpStatus.CREATED);
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<ProductModel> updateProduct(@PathVariable Long id, @RequestBody ProductModel product) {
-        ProductModel updatedProduct = productService.updateProduct(id, product);
-        return new ResponseEntity<>(updatedProduct, HttpStatus.OK);
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
-        productService.deleteProduct(id);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @PostMapping("/{id}/outofstock")
@@ -66,9 +69,21 @@ public class ProductController {
         return new ResponseEntity<>(product, HttpStatus.OK);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<ProductModel> updateProduct(@PathVariable Long id, @RequestBody ProductModel product) {
+        ProductModel updatedProduct = productService.updateProduct(id, product);
+        return new ResponseEntity<>(updatedProduct, HttpStatus.OK);
+    }
+
     @PutMapping("/{id}/instock")
     public ResponseEntity<ProductModel> markProductInStock(@PathVariable Long id, @RequestParam int quantity) {
         ProductModel product = productService.markInStock(id, quantity);
         return new ResponseEntity<>(product, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
+        productService.deleteProduct(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

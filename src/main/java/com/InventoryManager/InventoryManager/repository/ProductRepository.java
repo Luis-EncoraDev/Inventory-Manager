@@ -13,6 +13,15 @@ public interface ProductRepository extends JpaRepository<ProductModel, Long> {
     Page<ProductModel> findByNameContainingIgnoreCase(String name, Pageable pageable);
     Page<ProductModel> findByCategoryIn(List<String> categories, Pageable pageable);
 
+    @Query("SELECT SUM(p.stockQuantity) FROM ProductModel p WHERE (p.category = :category)")
+    Integer getTotalProductStockInCategory(@Param("category") String category);
+
+    @Query("SELECT SUM(p.unitPrice) FROM ProductModel p WHERE (p.category = :category)")
+    Float getTotalValueInCategory(@Param("category") String category);
+
+    @Query("SELECT AVG(p.unitPrice) FROM ProductModel p WHERE (p.category = :category)")
+    Float getAverageValueInCategory(@Param("category") String category);
+
     @Query("SELECT p FROM ProductModel p WHERE (:inStock is null OR (p.stockQuantity > 0 AND :inStock = true) OR (p.stockQuantity = 0 AND :inStock = false))")
     Page<ProductModel> findByStockAvailability(@Param("inStock") Boolean inStock, Pageable pageable);
 
@@ -25,5 +34,4 @@ public interface ProductRepository extends JpaRepository<ProductModel, Long> {
             @Param("categories") List<String> categories,
             @Param("inStock") Boolean inStock,
             Pageable pageable);
-
 }
