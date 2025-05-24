@@ -82,7 +82,6 @@ public class ProductService {
                 .orElseThrow(() -> new ProductException("Product not found with id: " + id, HttpStatus.NOT_FOUND));
     }
 
-    // Mark product in stock
     public ProductModel markInStock(Long id, int quantity) {
         return productRepository.findById(id)
                 .map(product -> {
@@ -91,4 +90,26 @@ public class ProductService {
                 })
                 .orElseThrow(() -> new ProductException("Product not found with id: " + id, HttpStatus.NOT_FOUND));
     }
-}
+
+    public Integer getTotalProductsInStockInCategory(String category) {
+        try {
+            return productRepository.getTotalProductStockInCategory(category);
+        } catch (Exception ex) { throw  new ProductException(ex.getMessage(), HttpStatus.NOT_FOUND);
+        }
+    }
+
+    public Float getTotalValueInCategory(String category) {
+        try {
+            return productRepository.getTotalValueInCategory(category);
+        } catch (Exception ex) { throw  new ProductException(ex.getMessage(), HttpStatus.NOT_FOUND);
+        }
+    }
+
+    public Float getAverageValueInCategory(String category) {
+        try {
+            return productRepository.getAverageValueInCategory(category);
+        } catch (Exception ex) { throw new ProductException(ex.getMessage(), HttpStatus.NOT_FOUND);
+        }
+    }
+
+ }
