@@ -1,5 +1,6 @@
 package com.InventoryManager.InventoryManager.controller;
 
+import com.InventoryManager.InventoryManager.dto.CategoryMetricsDTO;
 import com.InventoryManager.InventoryManager.model.ProductModel;
 import com.InventoryManager.InventoryManager.service.ProductService;
 import org.apache.coyote.Response;
@@ -47,14 +48,24 @@ public class ProductController {
         return new ResponseEntity<Integer>(productService.getTotalProductsInStockInCategory(category), HttpStatus.OK);
     }
 
-    @GetMapping("categoryTotalValue/{category}")
+    @GetMapping("/categoryTotalValue/{category}")
     public ResponseEntity<Float> getTotalValueInCategory(@PathVariable String category) {
         return new ResponseEntity<Float>(productService.getTotalValueInCategory(category), HttpStatus.OK);
     }
 
-    @GetMapping("categoryAverageValue/{category}")
+    @GetMapping("/categoryAverageValue/{category}")
     public ResponseEntity<Float> getAverageValueInCategory(@PathVariable String category) {
         return new ResponseEntity<Float>(productService.getAverageValueInCategory(category), HttpStatus.OK);
+    }
+
+    @GetMapping("/averageValue")
+    public ResponseEntity<Float> getAverageValue() {
+        return new ResponseEntity<Float>(productService.getAverageValue(), HttpStatus.OK);
+    }
+
+    @GetMapping("/categoryMetrics/{category}")
+    public ResponseEntity<CategoryMetricsDTO> getCategoryMetrics(@PathVariable String category) {
+        return new ResponseEntity<CategoryMetricsDTO>(productService.getCategoryMetrics(category), HttpStatus.OK);
     }
 
     @PostMapping

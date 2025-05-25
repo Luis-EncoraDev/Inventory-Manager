@@ -39,10 +39,10 @@ public class ProductModel {
     private Integer stockQuantity;
 
     @CreationTimestamp
-    private LocalDateTime creationDate;
+    private LocalDate creationDate;
 
     @UpdateTimestamp
-    private LocalDateTime updateDate;
+    private LocalDate updateDate;
 
     public boolean isInStock() {
         return stockQuantity > 0;
