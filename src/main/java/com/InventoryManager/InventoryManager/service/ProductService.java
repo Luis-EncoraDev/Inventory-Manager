@@ -1,4 +1,5 @@
 package com.InventoryManager.InventoryManager.service;
+import com.InventoryManager.InventoryManager.dto.CategoryMetricsDTO;
 import com.InventoryManager.InventoryManager.dto.exception.ProductException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,8 +10,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import com.InventoryManager.InventoryManager.model.ProductModel;
 import com.InventoryManager.InventoryManager.repository.ProductRepository;
+
+import java.sql.Array;
 import java.util.List;
 import java.util.Optional; // Import for Optional
+import java.util.concurrent.ExecutionException;
 
 @Service
 public class ProductService {
@@ -42,7 +46,7 @@ public class ProductService {
         try {
             createdProduct = productRepository.save(product);
         } catch (Exception ex) {
-            throw new ProductException(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new ProductException(ex.getCause().toString(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
         return  createdProduct;
     }
@@ -112,4 +116,16 @@ public class ProductService {
         }
     }
 
+    public Float getAverageValue() {
+        try {
+            return productRepository.getAverageValue();
+        } catch (Exception ex) { throw new ProductException(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR); }
+    }
+
+    public CategoryMetricsDTO getCategoryMetrics(String category) {
+        try {
+            return productRepository.getCategoryMetrics(category);
+        } catch (Exception ex) { throw  new ProductException(ex.getMessage(), HttpStatus.NOT_FOUND);
+        }
+    }
  }
