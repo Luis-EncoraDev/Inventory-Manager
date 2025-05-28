@@ -1,9 +1,11 @@
 package com.InventoryManager.InventoryManager.repository;
 import com.InventoryManager.InventoryManager.model.ProductModel;
 import com.InventoryManager.InventoryManager.dto.CategoryMetricsDTO;
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -23,7 +25,7 @@ public interface ProductRepository extends JpaRepository<ProductModel, Long> {
     @Query("SELECT SUM(p.stockQuantity) FROM ProductModel p WHERE (p.category = :category)")
     Integer getTotalProductStockInCategory(@Param("category") String category);
 
-    @Query("SELECT SUM(p.unitPrice) FROM ProductModel p WHERE (p.category = :category)")
+    @Query("SELECT SUM(p.unitPrice * p.stockQuantity) FROM ProductModel p WHERE (p.category = :category)")
     Float getTotalValueInCategory(@Param("category") String category);
 
     @Query("SELECT AVG(p.unitPrice) FROM ProductModel p WHERE (p.category = :category)")
