@@ -1,6 +1,6 @@
 package com.InventoryManager.InventoryManager.service;
 import com.InventoryManager.InventoryManager.dto.CategoryMetricsDTO;
-import com.InventoryManager.InventoryManager.dto.exception.ProductException;
+import com.InventoryManager.InventoryManager.dto.ProductException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -10,7 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import com.InventoryManager.InventoryManager.model.ProductModel;
 import com.InventoryManager.InventoryManager.repository.ProductRepository;
-
 import java.sql.Array;
 import java.util.List;
 import java.util.Optional; // Import for Optional
@@ -38,7 +37,8 @@ public class ProductService {
     }
 
     public ProductModel getProductById(Long id) {
-        return productRepository.findById(id).orElseThrow(() -> new ProductException("Did not find product with id " + id, HttpStatus.NOT_FOUND));
+        return productRepository.findById(id)
+                .orElseThrow(() -> new ProductException("Did not find product with id " + id, HttpStatus.NOT_FOUND));
     }
 
     public ProductModel createProduct(@Valid ProductModel product) {
@@ -70,7 +70,6 @@ public class ProductService {
     }
 
     public void deleteProduct(Long id) {
-        // Check if product exists before deleting
         if (!productRepository.existsById(id)) {
             throw new ProductException("Product not found with id: " + id, HttpStatus.NOT_FOUND);
         }

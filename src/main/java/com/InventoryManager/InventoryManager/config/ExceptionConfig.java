@@ -1,6 +1,6 @@
 package com.InventoryManager.InventoryManager.config;
 
-import com.InventoryManager.InventoryManager.dto.exception.ProductException;
+import com.InventoryManager.InventoryManager.dto.ProductException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
