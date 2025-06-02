@@ -57,7 +57,7 @@ public class ProductServiceTest {
     @DisplayName("Should return products")
     void getProducts() {
         String name = "Product";
-        List<String> categories = Arrays.asList("Electronics", "Books");
+        List<String> categories = Arrays.asList("Electronics");
         Boolean inStock = true;
 
         when(productRepository.findProductsByFilters(name, categories, inStock, pageable)).thenReturn(mockPage);

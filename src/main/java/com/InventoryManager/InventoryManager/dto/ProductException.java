@@ -1,4 +1,4 @@
-package com.InventoryManager.InventoryManager.dto.exception;
+package com.InventoryManager.InventoryManager.dto;
 
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
