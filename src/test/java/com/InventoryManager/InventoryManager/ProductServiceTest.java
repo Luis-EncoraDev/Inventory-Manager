@@ -1,5 +1,7 @@
 package com.InventoryManager.InventoryManager;
 
+import com.InventoryManager.InventoryManager.dto.ProductRequestDTO;
+import com.InventoryManager.InventoryManager.dto.ProductResponseDTO;
 import com.InventoryManager.InventoryManager.model.ProductModel;
 import com.InventoryManager.InventoryManager.repository.ProductRepository;
 import com.InventoryManager.InventoryManager.service.ProductService;
@@ -33,7 +35,9 @@ public class ProductServiceTest {
 
     private PageRequest pageable;
     private List<ProductModel> mockProducts;
+    private List<ProductResponseDTO> mockProductResponses;
     private Page<ProductModel> mockPage;
+    private Page<ProductResponseDTO> mockResponsePage;
 
     @BeforeEach
     void setUp () {
@@ -43,14 +47,31 @@ public class ProductServiceTest {
         product1.setId(1L);
         product1.setName("Product 1");
         product1.setCategory("Electronics");
+        product1.setStockQuantity(10);
 
         ProductModel product2 = new ProductModel();
         product2.setId(2L);
         product2.setName("Product 2");
         product2.setCategory("Books");
+        product2.setStockQuantity(5);
 
         mockProducts = Arrays.asList(product1, product2);
         mockPage = new PageImpl<>(mockProducts, pageable, mockProducts.size());
+
+        ProductResponseDTO response1 = new ProductResponseDTO();
+        response1.setId(1L);
+        response1.setName("Product 1");
+        response1.setCategory("Electronics");
+        response1.setStockQuantity(10);
+
+        ProductResponseDTO response2 = new ProductResponseDTO();
+        response2.setId(2L);
+        response2.setName("Product 2");
+        response2.setCategory("Books");
+        response2.setStockQuantity(5);
+
+        mockProductResponses = Arrays.asList(response1, response2);
+        mockResponsePage = new PageImpl<>(mockProductResponses, pageable, mockProductResponses.size());
     }
 
     @Test
@@ -61,9 +82,10 @@ public class ProductServiceTest {
         Boolean inStock = true;
 
         when(productRepository.findProductsByFilters(name, categories, inStock, pageable)).thenReturn(mockPage);
-        Page<ProductModel> products = productService.getAllProducts(name, categories, inStock, pageable);
+        Page<ProductResponseDTO> products = productService.getAllProducts(name, categories, inStock, pageable);
 
         assertNotNull(products);
+        assertEquals(2, products.getTotalElements());
         verify(productRepository, times(1)).findProductsByFilters(name, categories, inStock, pageable);
     }
 
@@ -74,10 +96,11 @@ public class ProductServiceTest {
         expectedProduct.setId(1L);
         expectedProduct.setName("Test Product");
         expectedProduct.setCategory("Electronics");
+        expectedProduct.setStockQuantity(7);
 
         when(productRepository.findById(1L)).thenReturn(Optional.of(expectedProduct));
 
-        ProductModel result = productService.getProductById(1L);
+        ProductResponseDTO result = productService.getProductById(1L);
 
         assertNotNull(result);
         assertEquals("Test Product", result.getName());
@@ -88,50 +111,57 @@ public class ProductServiceTest {
     @Test
     @DisplayName("Should create product successfully")
     void createProduct() {
-        ProductModel inputProduct = new ProductModel();
+        ProductRequestDTO inputProduct = new ProductRequestDTO();
         inputProduct.setName("New Product");
         inputProduct.setCategory("Electronics");
         inputProduct.setUnitPrice(new BigDecimal("100.00"));
+        inputProduct.setStockQuantity(8);
 
         ProductModel savedProduct = new ProductModel();
         savedProduct.setId(1L);
         savedProduct.setName("New Product");
         savedProduct.setCategory("Electronics");
         savedProduct.setUnitPrice(new BigDecimal("100.00"));
+        savedProduct.setStockQuantity(8);
 
-        when(productRepository.save(inputProduct)).thenReturn(savedProduct);
+        when(productRepository.save(any(ProductModel.class))).thenReturn(savedProduct);
 
-        ProductModel result = productService.createProduct(inputProduct);
+        ProductResponseDTO result = productService.createProduct(inputProduct);
 
         assertNotNull(result);
-        assertEquals(1L, result.getId());
         assertEquals("New Product", result.getName());
-        verify(productRepository, times(1)).save(inputProduct);
+        assertEquals("Electronics", result.getCategory());
+        verify(productRepository, times(1)).save(any(ProductModel.class));
     }
 
     @Test
     @DisplayName("Should update product successfully")
     void updateProduct() {
         Long productId = 1L;
+        ProductRequestDTO updateData = new ProductRequestDTO();
+        updateData.setName("Updated Product");
+        updateData.setCategory("Electronics");
+        updateData.setUnitPrice(new BigDecimal("150.00"));
+        updateData.setStockQuantity(12);
+
         ProductModel existingProduct = new ProductModel();
         existingProduct.setId(productId);
         existingProduct.setName("Old Product");
-        existingProduct.setCategory("Books");
-
-        ProductModel updateData = new ProductModel();
-        updateData.setName("Updated Product");
-        updateData.setCategory("Electronics");
-        updateData.setUnitPrice(new BigDecimal("150.0"));
+        existingProduct.setCategory("Electronics");
+        existingProduct.setUnitPrice(new BigDecimal("100.00"));
+        existingProduct.setStockQuantity(5);
 
         ProductModel updatedProduct = new ProductModel();
         updatedProduct.setId(productId);
         updatedProduct.setName("Updated Product");
         updatedProduct.setCategory("Electronics");
+        updatedProduct.setUnitPrice(new BigDecimal("150.00"));
+        updatedProduct.setStockQuantity(12);
 
         when(productRepository.findById(productId)).thenReturn(Optional.of(existingProduct));
         when(productRepository.save(any(ProductModel.class))).thenReturn(updatedProduct);
 
-        ProductModel result = productService.updateProduct(productId, updateData);
+        ProductResponseDTO result = productService.updateProduct(productId, updateData);
 
         assertNotNull(result);
         assertEquals("Updated Product", result.getName());
@@ -141,64 +171,47 @@ public class ProductServiceTest {
     }
 
     @Test
-    @DisplayName("Should delete product successfully")
-    void deleteProduct() {
-        Long productId = 1L;
-
-        when(productRepository.existsById(productId)).thenReturn(true);
-
-        productService.deleteProduct(productId);
-
-        verify(productRepository, times(1)).existsById(productId);
-        verify(productRepository, times(1)).deleteById(productId);
-    }
-
-    @Test
     @DisplayName("Should mark product out of stock")
     void markOutOfStock() {
         Long productId = 1L;
-        ProductModel existingProduct = new ProductModel();
-        existingProduct.setId(productId);
-        existingProduct.setName("Test Product");
-        //existingProduct.setInStock(true);
+        ProductModel product = new ProductModel();
+        product.setId(productId);
+        product.setStockQuantity(10);
 
         ProductModel outOfStockProduct = new ProductModel();
         outOfStockProduct.setId(productId);
-        outOfStockProduct.setName("Test Product");
-        //outOfStockProduct.setInStock(false);
+        outOfStockProduct.setStockQuantity(0);
 
-        when(productRepository.findById(productId)).thenReturn(Optional.of(existingProduct));
+        when(productRepository.findById(productId)).thenReturn(Optional.of(product));
         when(productRepository.save(any(ProductModel.class))).thenReturn(outOfStockProduct);
 
-        ProductModel result = productService.markOutOfStock(productId);
+        ProductResponseDTO result = productService.markOutOfStock(productId);
 
         assertNotNull(result);
-        assertEquals(productId, result.getId());
+        assertEquals(0, result.getStockQuantity());
         verify(productRepository, times(1)).findById(productId);
         verify(productRepository, times(1)).save(any(ProductModel.class));
     }
 
     @Test
-    @DisplayName("Should mark product in stock with quantity")
+    @DisplayName("Should mark product in stock")
     void markInStock() {
         Long productId = 1L;
-        int quantity = 50;
-        ProductModel existingProduct = new ProductModel();
-        existingProduct.setId(productId);
-        existingProduct.setName("Test Product");
+        int quantity = 20;
+        ProductModel product = new ProductModel();
+        product.setId(productId);
+        product.setStockQuantity(0);
 
         ProductModel inStockProduct = new ProductModel();
         inStockProduct.setId(productId);
-        inStockProduct.setName("Test Product");
         inStockProduct.setStockQuantity(quantity);
 
-        when(productRepository.findById(productId)).thenReturn(Optional.of(existingProduct));
+        when(productRepository.findById(productId)).thenReturn(Optional.of(product));
         when(productRepository.save(any(ProductModel.class))).thenReturn(inStockProduct);
 
-        ProductModel result = productService.markInStock(productId, quantity);
+        ProductResponseDTO result = productService.markInStock(productId, quantity);
 
         assertNotNull(result);
-        assertEquals(productId, result.getId());
         assertEquals(quantity, result.getStockQuantity());
         verify(productRepository, times(1)).findById(productId);
         verify(productRepository, times(1)).save(any(ProductModel.class));

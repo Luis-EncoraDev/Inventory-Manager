@@ -1,6 +1,8 @@
 package com.InventoryManager.InventoryManager.controller;
 
 import com.InventoryManager.InventoryManager.dto.CategoryMetricsDTO;
+import com.InventoryManager.InventoryManager.dto.ProductRequestDTO;
+import com.InventoryManager.InventoryManager.dto.ProductResponseDTO;
 import com.InventoryManager.InventoryManager.model.ProductModel;
 import com.InventoryManager.InventoryManager.service.ProductService;
 import org.apache.coyote.Response;
@@ -28,17 +30,17 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<ProductModel>> getProducts(
+    public ResponseEntity<Page<ProductResponseDTO>> getProducts(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) List<String> category,
             @RequestParam(required = false) Boolean inStock,
             @PageableDefault(page = 0, size = 10) Pageable pageable) {
-        Page<ProductModel> products = productService.getAllProducts(name, category, inStock, pageable);
+        Page<ProductResponseDTO> products = productService.getAllProducts(name, category, inStock, pageable);
         return new ResponseEntity<>(products, HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductModel> getProductById(@PathVariable Long id) {
+    public ResponseEntity<ProductResponseDTO> getProductById(@PathVariable Long id) {
         var product = productService.getProductById(id);
         return new ResponseEntity<>(product, HttpStatus.OK);
     };
@@ -69,26 +71,26 @@ public class ProductController {
     }
 
     @PostMapping
-    public ResponseEntity<ProductModel> createProduct(@RequestBody ProductModel product) {
-        ProductModel createdProduct = productService.createProduct(product);
+    public ResponseEntity<ProductResponseDTO> createProduct(@RequestBody ProductRequestDTO productRequestDTO) {
+        ProductResponseDTO createdProduct = productService.createProduct(productRequestDTO);
         return new ResponseEntity<>(createdProduct, HttpStatus.CREATED);
     }
 
     @PostMapping("/{id}/outofstock")
-    public ResponseEntity<ProductModel> markProductOutOfStock(@PathVariable Long id) {
-        ProductModel product = productService.markOutOfStock(id);
+    public ResponseEntity<ProductResponseDTO> markProductOutOfStock(@PathVariable Long id) {
+        ProductResponseDTO product = productService.markOutOfStock(id);
         return new ResponseEntity<>(product, HttpStatus.OK);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProductModel> updateProduct(@PathVariable Long id, @RequestBody ProductModel product) {
-        ProductModel updatedProduct = productService.updateProduct(id, product);
+    public ResponseEntity<ProductResponseDTO> updateProduct(@PathVariable Long id, @RequestBody ProductRequestDTO productRequestDTO) {
+        ProductResponseDTO updatedProduct = productService.updateProduct(id, productRequestDTO);
         return new ResponseEntity<>(updatedProduct, HttpStatus.OK);
     }
 
     @PutMapping("/{id}/instock")
-    public ResponseEntity<ProductModel> markProductInStock(@PathVariable Long id, @RequestParam int quantity) {
-        ProductModel product = productService.markInStock(id, quantity);
+    public ResponseEntity<ProductResponseDTO> markProductInStock(@PathVariable Long id, @RequestParam int quantity) {
+        ProductResponseDTO product = productService.markInStock(id, quantity);
         return new ResponseEntity<>(product, HttpStatus.OK);
     }
 
