@@ -54,7 +54,6 @@ public class ProductService {
         return productRepository.findProductsByFilters(name, categories, inStock, pageable)
                 .map(this::toProductResponseDTO);
     }
-
     public ProductResponseDTO getProductById(Long id) {
         ProductModel product = productRepository.findById(id)
                 .orElseThrow(() -> new ProductException("Did not find product with id " + id, HttpStatus.NOT_FOUND));
