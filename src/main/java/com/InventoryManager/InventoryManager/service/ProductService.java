@@ -1,19 +1,17 @@
 package com.InventoryManager.InventoryManager.service;
 import com.InventoryManager.InventoryManager.dto.CategoryMetricsDTO;
 import com.InventoryManager.InventoryManager.dto.ProductException;
+import com.InventoryManager.InventoryManager.dto.ProductRequestDTO;
+import com.InventoryManager.InventoryManager.dto.ProductResponseDTO;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import com.InventoryManager.InventoryManager.model.ProductModel;
 import com.InventoryManager.InventoryManager.repository.ProductRepository;
-import java.sql.Array;
 import java.util.List;
-import java.util.Optional; // Import for Optional
-import java.util.concurrent.ExecutionException;
 
 @Service
 public class ProductService {
@@ -24,46 +22,73 @@ public class ProductService {
         this.productRepository = productRepository;
     }
 
-    public Page<ProductModel> getAllProducts(
+    private ProductModel toProductModel(ProductRequestDTO dto) {
+        ProductModel product = new ProductModel();
+        product.setName(dto.getName());
+        product.setCategory(dto.getCategory());
+        product.setUnitPrice(dto.getUnitPrice());
+        product.setExpirationDate(dto.getExpirationDate());
+        product.setStockQuantity(dto.getStockQuantity());
+        return product;
+    }
+
+    private ProductResponseDTO toProductResponseDTO(ProductModel product) {
+        ProductResponseDTO dto = new ProductResponseDTO();
+        dto.setId(product.getId());
+        dto.setName(product.getName());
+        dto.setCategory(product.getCategory());
+        dto.setUnitPrice(product.getUnitPrice());
+        dto.setExpirationDate(product.getExpirationDate());
+        dto.setStockQuantity(product.getStockQuantity());
+        dto.setCreationDate(product.getCreationDate());
+        dto.setUpdateDate(product.getUpdateDate());
+        dto.setInStock(product.isInStock());
+        return dto;
+    }
+
+    public Page<ProductResponseDTO> getAllProducts(
             String name,
             List<String> categories,
             Boolean inStock,
             Pageable pageable) {
         try {
-            return productRepository.findProductsByFilters(name, categories, inStock, pageable);
+            return productRepository.findProductsByFilters(name, categories, inStock, pageable)
+                    .map(this::toProductResponseDTO);
         } catch (Exception ex) {
             throw new ProductException("Error fetching products: " + ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    public ProductModel getProductById(Long id) {
-        return productRepository.findById(id)
+    public ProductResponseDTO getProductById(Long id) {
+        ProductModel product = productRepository.findById(id)
                 .orElseThrow(() -> new ProductException("Did not find product with id " + id, HttpStatus.NOT_FOUND));
+        return toProductResponseDTO(product);
     }
 
-    public ProductModel createProduct(@Valid ProductModel product) {
+    public ProductResponseDTO createProduct(@Valid ProductRequestDTO productRequestDTO) {
+        ProductModel product = toProductModel(productRequestDTO);
         ProductModel createdProduct;
         try {
             createdProduct = productRepository.save(product);
         } catch (Exception ex) {
             throw new ProductException(ex.getCause().toString(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return  createdProduct;
+        return toProductResponseDTO(createdProduct);
     }
 
-    public ProductModel updateProduct(Long id, @Valid ProductModel product) {
+    public ProductResponseDTO updateProduct(Long id, @Valid ProductRequestDTO productRequestDTO) {
         ProductModel updatedProduct;
         try {
             updatedProduct = productRepository.findById(id)
                     .map((toUpdateProduct) -> {
-                        toUpdateProduct.setName(product.getName());
-                        toUpdateProduct.setCategory(product.getCategory());
-                        toUpdateProduct.setUnitPrice(product.getUnitPrice());
-                        toUpdateProduct.setExpirationDate(product.getExpirationDate());
-                        toUpdateProduct.setStockQuantity(product.getStockQuantity());
+                        toUpdateProduct.setName(productRequestDTO.getName());
+                        toUpdateProduct.setCategory(productRequestDTO.getCategory());
+                        toUpdateProduct.setUnitPrice(productRequestDTO.getUnitPrice());
+                        toUpdateProduct.setExpirationDate(productRequestDTO.getExpirationDate());
+                        toUpdateProduct.setStockQuantity(productRequestDTO.getStockQuantity());
                         return toUpdateProduct;
                     }).orElseThrow(() -> new ProductException("Didn't find product with id: " + id, HttpStatus.NOT_FOUND));
-            return productRepository.save(updatedProduct);
+            return toProductResponseDTO(productRepository.save(updatedProduct));
         } catch (Exception ex) {
             throw new ProductException(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -76,22 +101,24 @@ public class ProductService {
         productRepository.deleteById(id);
     }
 
-    public ProductModel markOutOfStock(Long id) {
-        return productRepository.findById(id)
-                .map(product -> {
-                    product.markOutOfStock();
-                    return productRepository.save(product);
+    public ProductResponseDTO markOutOfStock(Long id) {
+        ProductModel product = productRepository.findById(id)
+                .map(p -> {
+                    p.markOutOfStock();
+                    return productRepository.save(p);
                 })
                 .orElseThrow(() -> new ProductException("Product not found with id: " + id, HttpStatus.NOT_FOUND));
+        return toProductResponseDTO(product);
     }
 
-    public ProductModel markInStock(Long id, int quantity) {
-        return productRepository.findById(id)
-                .map(product -> {
-                    product.markInStock(quantity);
-                    return productRepository.save(product);
+    public ProductResponseDTO markInStock(Long id, int quantity) {
+        ProductModel product = productRepository.findById(id)
+                .map(p -> {
+                    p.markInStock(quantity);
+                    return productRepository.save(p);
                 })
                 .orElseThrow(() -> new ProductException("Product not found with id: " + id, HttpStatus.NOT_FOUND));
+        return toProductResponseDTO(product);
     }
 
     public Integer getTotalProductsInStockInCategory(String category) {
