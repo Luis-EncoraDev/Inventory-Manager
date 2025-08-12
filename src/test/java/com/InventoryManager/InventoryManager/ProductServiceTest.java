@@ -1,5 +1,6 @@
 package com.InventoryManager.InventoryManager;
 
+import com.InventoryManager.InventoryManager.dto.ProductException;
 import com.InventoryManager.InventoryManager.dto.ProductRequestDTO;
 import com.InventoryManager.InventoryManager.dto.ProductResponseDTO;
 import com.InventoryManager.InventoryManager.model.ProductModel;
@@ -274,5 +275,90 @@ public class ProductServiceTest {
         assertNotNull(result);
         assertEquals(expectedAverage, result);
         verify(productRepository, times(1)).getAverageValue();
+    }
+
+    @Test
+    @DisplayName("Should throw ProductException when product not found by ID")
+    void getProductById_NotFound() {
+        when(productRepository.findById(99L)).thenReturn(Optional.empty());
+        ProductException ex = assertThrows(ProductException.class, () -> productService.getProductById(99L));
+        assertEquals("Did not find product with id 99", ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("Should throw ProductException when updating non-existent product")
+    void updateProduct_NotFound() {
+        when(productRepository.findById(99L)).thenReturn(Optional.empty());
+        ProductRequestDTO updateData = new ProductRequestDTO();
+        updateData.setName("Updated");
+        updateData.setCategory("Electronics");
+        updateData.setUnitPrice(new BigDecimal("10.00"));
+        updateData.setStockQuantity(1);
+        ProductException ex = assertThrows(ProductException.class, () -> productService.updateProduct(99L, updateData));
+        assertTrue(ex.getMessage().contains("Didn't find product with id: 99"));
+    }
+
+    @Test
+    @DisplayName("Should throw ProductException when deleting non-existent product")
+    void deleteProduct_NotFound() {
+        when(productRepository.existsById(99L)).thenReturn(false);
+        ProductException ex = assertThrows(ProductException.class, () -> productService.deleteProduct(99L));
+        assertTrue(ex.getMessage().contains("Product not found with id: 99"));
+    }
+
+    @Test
+    @DisplayName("Should throw ProductException when marking out of stock for non-existent product")
+    void markOutOfStock_NotFound() {
+        when(productRepository.findById(99L)).thenReturn(Optional.empty());
+        ProductException ex = assertThrows(ProductException.class, () -> productService.markOutOfStock(99L));
+        assertTrue(ex.getMessage().contains("Product not found with id: 99"));
+    }
+
+    @Test
+    @DisplayName("Should throw ProductException when marking in stock for non-existent product")
+    void markInStock_NotFound() {
+        when(productRepository.findById(99L)).thenReturn(Optional.empty());
+        ProductException ex = assertThrows(ProductException.class, () -> productService.markInStock(99L, 10));
+        assertTrue(ex.getMessage().contains("Product not found with id: 99"));
+    }
+
+    @Test
+    @DisplayName("Should throw ProductException when getting total products in stock for non-existent category")
+    void getTotalProductsInStockInCategory_NotFound() {
+        when(productRepository.getTotalProductStockInCategory("NonExistent")).thenReturn(null);
+        ProductException ex = assertThrows(ProductException.class, () -> productService.getTotalProductsInStockInCategory("NonExistent"));
+        assertTrue(ex.getMessage().contains("No products found in category: NonExistent"));
+    }
+
+    @Test
+    @DisplayName("Should throw ProductException when getting total value in non-existent category")
+    void getTotalValueInCategory_NotFound() {
+        when(productRepository.getTotalValueInCategory("NonExistent")).thenReturn(null);
+        ProductException ex = assertThrows(ProductException.class, () -> productService.getTotalValueInCategory("NonExistent"));
+        assertTrue(ex.getMessage().contains("No products found in category: NonExistent"));
+    }
+
+    @Test
+    @DisplayName("Should throw ProductException when getting average value in non-existent category")
+    void getAverageValueInCategory_NotFound() {
+        when(productRepository.getAverageValueInCategory("NonExistent")).thenReturn(null);
+        ProductException ex = assertThrows(ProductException.class, () -> productService.getAverageValueInCategory("NonExistent"));
+        assertTrue(ex.getMessage().contains("No products found in category: NonExistent"));
+    }
+
+    @Test
+    @DisplayName("Should throw ProductException when getting overall average value and no products exist")
+    void getAverageValue_NotFound() {
+        when(productRepository.getAverageValue()).thenReturn(null);
+        ProductException ex = assertThrows(ProductException.class, () -> productService.getAverageValue());
+        assertTrue(ex.getMessage().contains("No products found."));
+    }
+
+    @Test
+    @DisplayName("Should throw ProductException when getting category metrics for non-existent category")
+    void getCategoryMetrics_NotFound() {
+        when(productRepository.getCategoryMetrics("NonExistent")).thenReturn(null);
+        ProductException ex = assertThrows(ProductException.class, () -> productService.getCategoryMetrics("NonExistent"));
+        assertTrue(ex.getMessage().contains("No products found in category: NonExistent"));
     }
 }

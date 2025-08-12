@@ -51,14 +51,9 @@ public class ProductService {
             List<String> categories,
             Boolean inStock,
             Pageable pageable) {
-        try {
-            return productRepository.findProductsByFilters(name, categories, inStock, pageable)
-                    .map(this::toProductResponseDTO);
-        } catch (Exception ex) {
-            throw new ProductException("Error fetching products: " + ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        return productRepository.findProductsByFilters(name, categories, inStock, pageable)
+                .map(this::toProductResponseDTO);
     }
-
     public ProductResponseDTO getProductById(Long id) {
         ProductModel product = productRepository.findById(id)
                 .orElseThrow(() -> new ProductException("Did not find product with id " + id, HttpStatus.NOT_FOUND));
@@ -67,31 +62,21 @@ public class ProductService {
 
     public ProductResponseDTO createProduct(@Valid ProductRequestDTO productRequestDTO) {
         ProductModel product = toProductModel(productRequestDTO);
-        ProductModel createdProduct;
-        try {
-            createdProduct = productRepository.save(product);
-        } catch (Exception ex) {
-            throw new ProductException(ex.getCause().toString(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        ProductModel createdProduct = productRepository.save(product);
         return toProductResponseDTO(createdProduct);
     }
 
     public ProductResponseDTO updateProduct(Long id, @Valid ProductRequestDTO productRequestDTO) {
-        ProductModel updatedProduct;
-        try {
-            updatedProduct = productRepository.findById(id)
-                    .map((toUpdateProduct) -> {
-                        toUpdateProduct.setName(productRequestDTO.getName());
-                        toUpdateProduct.setCategory(productRequestDTO.getCategory());
-                        toUpdateProduct.setUnitPrice(productRequestDTO.getUnitPrice());
-                        toUpdateProduct.setExpirationDate(productRequestDTO.getExpirationDate());
-                        toUpdateProduct.setStockQuantity(productRequestDTO.getStockQuantity());
-                        return toUpdateProduct;
-                    }).orElseThrow(() -> new ProductException("Didn't find product with id: " + id, HttpStatus.NOT_FOUND));
-            return toProductResponseDTO(productRepository.save(updatedProduct));
-        } catch (Exception ex) {
-            throw new ProductException(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        ProductModel updatedProduct = productRepository.findById(id)
+                .map((toUpdateProduct) -> {
+                    toUpdateProduct.setName(productRequestDTO.getName());
+                    toUpdateProduct.setCategory(productRequestDTO.getCategory());
+                    toUpdateProduct.setUnitPrice(productRequestDTO.getUnitPrice());
+                    toUpdateProduct.setExpirationDate(productRequestDTO.getExpirationDate());
+                    toUpdateProduct.setStockQuantity(productRequestDTO.getStockQuantity());
+                    return toUpdateProduct;
+                }).orElseThrow(() -> new ProductException("Didn't find product with id: " + id, HttpStatus.NOT_FOUND));
+        return toProductResponseDTO(productRepository.save(updatedProduct));
     }
 
     public void deleteProduct(Long id) {
@@ -122,36 +107,42 @@ public class ProductService {
     }
 
     public Integer getTotalProductsInStockInCategory(String category) {
-        try {
-            return productRepository.getTotalProductStockInCategory(category);
-        } catch (Exception ex) { throw  new ProductException(ex.getMessage(), HttpStatus.NOT_FOUND);
+        Integer total = productRepository.getTotalProductStockInCategory(category);
+        if (total == null) {
+            throw new ProductException("No products found in category: " + category, HttpStatus.NOT_FOUND);
         }
+        return total;
     }
 
     public Float getTotalValueInCategory(String category) {
-        try {
-            return productRepository.getTotalValueInCategory(category);
-        } catch (Exception ex) { throw  new ProductException(ex.getMessage(), HttpStatus.NOT_FOUND);
+        Float total = productRepository.getTotalValueInCategory(category);
+        if (total == null) {
+            throw new ProductException("No products found in category: " + category, HttpStatus.NOT_FOUND);
         }
+        return total;
     }
 
     public Float getAverageValueInCategory(String category) {
-        try {
-            return productRepository.getAverageValueInCategory(category);
-        } catch (Exception ex) { throw new ProductException(ex.getMessage(), HttpStatus.NOT_FOUND);
+        Float avg = productRepository.getAverageValueInCategory(category);
+        if (avg == null) {
+            throw new ProductException("No products found in category: " + category, HttpStatus.NOT_FOUND);
         }
+        return avg;
     }
 
     public Float getAverageValue() {
-        try {
-            return productRepository.getAverageValue();
-        } catch (Exception ex) { throw new ProductException(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR); }
+        Float avg = productRepository.getAverageValue();
+        if (avg == null) {
+            throw new ProductException("No products found.", HttpStatus.NOT_FOUND);
+        }
+        return avg;
     }
 
     public CategoryMetricsDTO getCategoryMetrics(String category) {
-        try {
-            return productRepository.getCategoryMetrics(category);
-        } catch (Exception ex) { throw  new ProductException(ex.getMessage(), HttpStatus.NOT_FOUND);
+        CategoryMetricsDTO metrics = productRepository.getCategoryMetrics(category);
+        if (metrics == null) {
+            throw new ProductException("No products found in category: " + category, HttpStatus.NOT_FOUND);
         }
+        return metrics;
     }
  }
